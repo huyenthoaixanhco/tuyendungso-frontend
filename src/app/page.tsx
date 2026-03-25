@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 import LoginModal from '@/components/LoginModal';
 import CandidateMegaNav from '@/components/CandidateMegaNav';
 import { getStoredAuth, logoutClient } from '@/lib/auth/client';
@@ -148,9 +147,7 @@ function formatMoney(value?: number | string | null) {
   if (value === null || value === undefined || value === '') return null;
 
   const numericValue =
-    typeof value === 'number'
-      ? value
-      : Number(String(value).replaceAll(',', '').trim());
+    typeof value === 'number' ? value : Number(String(value).replaceAll(',', '').trim());
 
   if (Number.isNaN(numericValue)) return null;
   return `${numericValue.toLocaleString('vi-VN')} đ`;
@@ -186,6 +183,50 @@ function PreviewTag() {
   );
 }
 
+function DesktopMenu({
+  menu,
+  title,
+  children,
+  widthClass,
+  openMenu,
+  setOpenMenu,
+}: {
+  menu: Exclude<MenuKey, null>;
+  title: string;
+  children: React.ReactNode;
+  widthClass: string;
+  openMenu: MenuKey;
+  setOpenMenu: React.Dispatch<React.SetStateAction<MenuKey>>;
+}) {
+  return (
+    <div
+      className="relative py-2"
+      onMouseEnter={() => setOpenMenu(menu)}
+      onMouseLeave={() => setOpenMenu(null)}
+    >
+      <button
+        type="button"
+        className={`flex items-center gap-1 text-sm font-semibold transition-colors ${
+          openMenu === menu ? 'text-emerald-600' : 'text-gray-700 hover:text-emerald-500'
+        }`}
+      >
+        {title}
+        <ChevronDown size={16} />
+      </button>
+
+      {openMenu === menu ? (
+        <div className="absolute left-1/2 top-full z-50 -translate-x-1/2 pt-2">
+          <div
+            className={`max-w-[92vw] overflow-hidden rounded-[24px] border border-gray-200 bg-white shadow-2xl ${widthClass}`}
+          >
+            {children}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function HomePreviewNav({
   onRequireAuth,
   onOpenPublicJobs,
@@ -199,303 +240,249 @@ function HomePreviewNav({
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    if (mobileOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-
+    document.body.style.overflow = mobileOpen ? 'hidden' : '';
     return () => {
       document.body.style.overflow = '';
     };
   }, [mobileOpen]);
 
-  const closeMenu = () => setOpenMenu(null);
+  const closeAll = () => {
+    setOpenMenu(null);
+    setMobileOpen(false);
+  };
 
   const handlePreviewClick = () => {
-    closeMenu();
-    setMobileOpen(false);
+    closeAll();
     onRequireAuth();
   };
 
   const handleOpenPublicJobs = () => {
-    closeMenu();
-    setMobileOpen(false);
+    closeAll();
     onOpenPublicJobs();
   };
 
   const handleOpenPublicKeyword = (keyword: string) => {
-    closeMenu();
-    setMobileOpen(false);
+    closeAll();
     onSelectPublicJobKeyword(keyword);
   };
 
   return (
     <>
       <nav className="relative hidden items-center gap-8 lg:flex">
-        <div
-          className="relative py-2"
-          onMouseEnter={() => setOpenMenu('jobs')}
-          onMouseLeave={closeMenu}
+        <DesktopMenu
+          menu="jobs"
+          title="Việc làm"
+          widthClass="w-[980px]"
+          openMenu={openMenu}
+          setOpenMenu={setOpenMenu}
         >
-          <button
-            type="button"
-            className={`flex items-center gap-1 text-sm font-semibold transition-colors ${
-              openMenu === 'jobs' ? 'text-emerald-600' : 'text-gray-700 hover:text-emerald-500'
-            }`}
-          >
-            Việc làm
-            <ChevronDown size={16} />
-          </button>
-
-          {openMenu === 'jobs' ? (
-            <div className="absolute left-[-180px] top-full z-50 pt-2">
-              <div className="w-[980px] max-w-[90vw] overflow-hidden rounded-[24px] border border-gray-200 bg-white shadow-2xl">
-                <div className="grid grid-cols-12">
-                  <div className="col-span-4 border-r border-gray-100 bg-gray-50/40 p-8">
-                    <div className="mb-5 flex items-center justify-between">
-                      <h4 className="text-sm font-extrabold uppercase tracking-wide text-gray-400">
-                        Việc làm
-                      </h4>
-                      <PreviewTag />
-                    </div>
-
-                    <ul className="space-y-1">
-                      {previewJobQuickLinks.map((item, index) => {
-                        const Icon = item.icon!;
-                        const isPublicSearch = index === 0;
-
-                        return (
-                          <li key={item.title}>
-                            <button
-                              type="button"
-                              onClick={isPublicSearch ? handleOpenPublicJobs : handlePreviewClick}
-                              className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left font-bold transition-colors ${
-                                isPublicSearch
-                                  ? 'bg-emerald-50 text-emerald-600'
-                                  : 'text-gray-700 hover:bg-gray-100'
-                              }`}
-                            >
-                              <Icon size={20} />
-                              <span>{item.title}</span>
-                              {!isPublicSearch ? (
-                                <Lock size={14} className="ml-auto text-gray-300" />
-                              ) : null}
-                            </button>
-                          </li>
-                        );
-                      })}
-                    </ul>
-
-                    <div className="mt-8">
-                      <h4 className="mb-4 text-sm font-extrabold uppercase tracking-wide text-gray-400">
-                        Công ty
-                      </h4>
-
-                      <ul className="space-y-1">
-                        {previewCompanyLinks.map((item) => {
-                          const Icon = item.icon!;
-                          return (
-                            <li key={item.title}>
-                              <button
-                                type="button"
-                                onClick={handlePreviewClick}
-                                className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-gray-700 transition-colors hover:bg-gray-100"
-                              >
-                                <Icon size={20} />
-                                <span>{item.title}</span>
-                                {item.badge ? (
-                                  <span className="ml-auto rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700">
-                                    {item.badge}
-                                  </span>
-                                ) : (
-                                  <Lock size={14} className="ml-auto text-gray-300" />
-                                )}
-                              </button>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="col-span-8 p-8">
-                    <div className="mb-6 flex items-center justify-between">
-                      <h4 className="text-sm font-extrabold uppercase tracking-wide text-gray-400">
-                        Việc làm theo vị trí
-                      </h4>
-                      <span className="text-xs font-semibold text-emerald-600">
-                        Có thể dùng để lọc việc công khai
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-x-12 gap-y-3">
-                      {previewJobPositionLinks.map((text) => (
-                        <button
-                          key={text}
-                          type="button"
-                          onClick={() => handleOpenPublicKeyword(text)}
-                          className="text-left font-semibold text-gray-700 transition-colors hover:text-emerald-600"
-                        >
-                          Việc làm {text}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+          <div className="grid grid-cols-12">
+            <div className="col-span-4 border-r border-gray-100 bg-gray-50/40 p-8">
+              <div className="mb-5 flex items-center justify-between">
+                <h4 className="text-sm font-extrabold uppercase tracking-wide text-gray-400">
+                  Việc làm
+                </h4>
+                <PreviewTag />
               </div>
-            </div>
-          ) : null}
-        </div>
 
-        <div
-          className="relative py-2"
-          onMouseEnter={() => setOpenMenu('cv')}
-          onMouseLeave={closeMenu}
-        >
-          <button
-            type="button"
-            className={`flex items-center gap-1 text-sm font-semibold transition-colors ${
-              openMenu === 'cv' ? 'text-emerald-600' : 'text-gray-700 hover:text-emerald-500'
-            }`}
-          >
-            Tạo CV
-            <ChevronDown size={16} />
-          </button>
+              <ul className="space-y-1">
+                {previewJobQuickLinks.map((item, index) => {
+                  const Icon = item.icon!;
+                  const isPublicSearch = index === 0;
 
-          {openMenu === 'cv' ? (
-            <div className="absolute left-[-140px] top-full z-50 pt-2">
-              <div className="w-[860px] max-w-[92vw] overflow-hidden rounded-[24px] border border-gray-200 bg-white shadow-2xl">
-                <div className="grid grid-cols-2">
-                  <div className="border-r border-gray-100 p-8">
-                    <div className="mb-6 flex items-center justify-between">
-                      <h4 className="text-[22px] font-extrabold text-emerald-600">
-                        Mẫu CV theo style →
-                      </h4>
-                      <PreviewTag />
-                    </div>
+                  return (
+                    <li key={item.title}>
+                      <button
+                        type="button"
+                        onClick={isPublicSearch ? handleOpenPublicJobs : handlePreviewClick}
+                        className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left font-bold transition-colors ${
+                          isPublicSearch
+                            ? 'bg-emerald-50 text-emerald-600'
+                            : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        <Icon size={20} />
+                        <span>{item.title}</span>
+                        {!isPublicSearch ? <Lock size={14} className="ml-auto text-gray-300" /> : null}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
 
-                    <ul className="space-y-4">
-                      {previewCvStyleLinks.map((item) => {
-                        const Icon = item.icon!;
-                        return (
-                          <li key={item.title}>
-                            <button
-                              type="button"
-                              onClick={handlePreviewClick}
-                              className="flex w-full items-center gap-3 text-left font-semibold text-gray-700 transition-colors hover:text-emerald-600"
-                            >
-                              <Icon size={20} />
-                              <span>{item.title}</span>
-                              <Lock size={14} className="ml-auto text-gray-300" />
-                            </button>
-                          </li>
-                        );
-                      })}
-                    </ul>
+              <div className="mt-8">
+                <h4 className="mb-4 text-sm font-extrabold uppercase tracking-wide text-gray-400">
+                  Công ty
+                </h4>
 
-                    <h4 className="mb-4 mt-8 text-[22px] font-extrabold text-emerald-600">
-                      Mẫu CV theo vị trí ứng tuyển →
-                    </h4>
-
-                    <ul className="space-y-3">
-                      {previewCvRoleLinks.map((item) => (
-                        <li key={item}>
-                          <button
-                            type="button"
-                            onClick={handlePreviewClick}
-                            className="flex w-full items-center gap-3 text-left font-semibold text-gray-700 transition-colors hover:text-emerald-600"
-                          >
-                            <span>{item}</span>
-                            <Lock size={14} className="ml-auto text-gray-300" />
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="p-8">
-                    <ul className="space-y-6">
-                      {previewCvManagerLinks.map((item, index) => {
-                        const Icon = item.icon!;
-                        return (
-                          <li
-                            key={item.title}
-                            className={index === 3 ? 'border-t border-gray-100 pt-4' : ''}
-                          >
-                            <button
-                              type="button"
-                              onClick={handlePreviewClick}
-                              className="flex w-full items-center gap-3 text-left text-lg font-semibold text-gray-700 transition-colors hover:text-emerald-600"
-                            >
-                              <Icon size={22} />
-                              <span>{item.title}</span>
-                              <Lock size={14} className="ml-auto text-gray-300" />
-                            </button>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : null}
-        </div>
-
-        <div
-          className="relative py-2"
-          onMouseEnter={() => setOpenMenu('tools')}
-          onMouseLeave={closeMenu}
-        >
-          <button
-            type="button"
-            className={`flex items-center gap-1 text-sm font-semibold transition-colors ${
-              openMenu === 'tools' ? 'text-emerald-600' : 'text-gray-700 hover:text-emerald-500'
-            }`}
-          >
-            Công cụ
-            <ChevronDown size={16} />
-          </button>
-
-          {openMenu === 'tools' ? (
-            <div className="absolute left-[-220px] top-full z-50 pt-2">
-              <div className="w-[860px] max-w-[92vw] overflow-hidden rounded-[24px] border border-gray-200 bg-white shadow-2xl">
-                <div className="p-8">
-                  <div className="mb-6 flex items-center justify-between">
-                    <h4 className="text-sm font-extrabold uppercase tracking-wide text-gray-400">
-                      Công cụ hỗ trợ ứng viên
-                    </h4>
-                    <PreviewTag />
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    {previewToolLinks.map((item) => {
-                      const Icon = item.icon;
-                      return (
+                <ul className="space-y-1">
+                  {previewCompanyLinks.map((item) => {
+                    const Icon = item.icon!;
+                    return (
+                      <li key={item.title}>
                         <button
-                          key={item.title}
                           type="button"
                           onClick={handlePreviewClick}
-                          className="rounded-2xl border border-gray-100 bg-gray-50 p-5 text-left transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-white"
+                          className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-gray-700 transition-colors hover:bg-gray-100"
                         >
-                          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm">
-                            <Icon size={24} />
-                          </div>
-                          <div className="flex items-start justify-between gap-3">
-                            <h5 className="text-base font-bold text-gray-900">{item.title}</h5>
-                            <Lock size={14} className="mt-1 shrink-0 text-gray-300" />
-                          </div>
-                          <p className="mt-2 text-sm leading-6 text-gray-500">{item.description}</p>
+                          <Icon size={20} />
+                          <span>{item.title}</span>
+                          {item.badge ? (
+                            <span className="ml-auto rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700">
+                              {item.badge}
+                            </span>
+                          ) : (
+                            <Lock size={14} className="ml-auto text-gray-300" />
+                          )}
                         </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
             </div>
-          ) : null}
-        </div>
+
+            <div className="col-span-8 p-8">
+              <div className="mb-6 flex items-center justify-between">
+                <h4 className="text-sm font-extrabold uppercase tracking-wide text-gray-400">
+                  Việc làm theo vị trí
+                </h4>
+                <span className="text-xs font-semibold text-emerald-600">
+                  Có thể dùng để lọc việc công khai
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-x-12 gap-y-3">
+                {previewJobPositionLinks.map((text) => (
+                  <button
+                    key={text}
+                    type="button"
+                    onClick={() => handleOpenPublicKeyword(text)}
+                    className="text-left font-semibold text-gray-700 transition-colors hover:text-emerald-600"
+                  >
+                    Việc làm {text}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </DesktopMenu>
+
+        <DesktopMenu
+          menu="cv"
+          title="Tạo CV"
+          widthClass="w-[860px]"
+          openMenu={openMenu}
+          setOpenMenu={setOpenMenu}
+        >
+          <div className="grid grid-cols-2">
+            <div className="border-r border-gray-100 p-8">
+              <div className="mb-6 flex items-center justify-between">
+                <h4 className="text-[22px] font-extrabold text-emerald-600">Mẫu CV theo style →</h4>
+                <PreviewTag />
+              </div>
+
+              <ul className="space-y-4">
+                {previewCvStyleLinks.map((item) => {
+                  const Icon = item.icon!;
+                  return (
+                    <li key={item.title}>
+                      <button
+                        type="button"
+                        onClick={handlePreviewClick}
+                        className="flex w-full items-center gap-3 text-left font-semibold text-gray-700 transition-colors hover:text-emerald-600"
+                      >
+                        <Icon size={20} />
+                        <span>{item.title}</span>
+                        <Lock size={14} className="ml-auto text-gray-300" />
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              <h4 className="mb-4 mt-8 text-[22px] font-extrabold text-emerald-600">
+                Mẫu CV theo vị trí ứng tuyển →
+              </h4>
+
+              <ul className="space-y-3">
+                {previewCvRoleLinks.map((item) => (
+                  <li key={item}>
+                    <button
+                      type="button"
+                      onClick={handlePreviewClick}
+                      className="flex w-full items-center gap-3 text-left font-semibold text-gray-700 transition-colors hover:text-emerald-600"
+                    >
+                      <span>{item}</span>
+                      <Lock size={14} className="ml-auto text-gray-300" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="p-8">
+              <ul className="space-y-6">
+                {previewCvManagerLinks.map((item, index) => {
+                  const Icon = item.icon!;
+                  return (
+                    <li key={item.title} className={index === 3 ? 'border-t border-gray-100 pt-4' : ''}>
+                      <button
+                        type="button"
+                        onClick={handlePreviewClick}
+                        className="flex w-full items-center gap-3 text-left text-lg font-semibold text-gray-700 transition-colors hover:text-emerald-600"
+                      >
+                        <Icon size={22} />
+                        <span>{item.title}</span>
+                        <Lock size={14} className="ml-auto text-gray-300" />
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </div>
+        </DesktopMenu>
+
+        <DesktopMenu
+          menu="tools"
+          title="Công cụ"
+          widthClass="w-[860px]"
+          openMenu={openMenu}
+          setOpenMenu={setOpenMenu}
+        >
+          <div className="p-8">
+            <div className="mb-6 flex items-center justify-between">
+              <h4 className="text-sm font-extrabold uppercase tracking-wide text-gray-400">
+                Công cụ hỗ trợ ứng viên
+              </h4>
+              <PreviewTag />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              {previewToolLinks.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.title}
+                    type="button"
+                    onClick={handlePreviewClick}
+                    className="rounded-2xl border border-gray-100 bg-gray-50 p-5 text-left transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-white"
+                  >
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm">
+                      <Icon size={24} />
+                    </div>
+                    <div className="flex items-start justify-between gap-3">
+                      <h5 className="text-base font-bold text-gray-900">{item.title}</h5>
+                      <Lock size={14} className="mt-1 shrink-0 text-gray-300" />
+                    </div>
+                    <p className="mt-2 text-sm leading-6 text-gray-500">{item.description}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </DesktopMenu>
 
         <button
           type="button"
@@ -590,35 +577,6 @@ function HomePreviewNav({
                       ))}
                     </div>
                   </div>
-
-                  <div className="mt-5">
-                    <div className="mb-2 text-xs font-extrabold uppercase tracking-wide text-gray-400">
-                      Công ty
-                    </div>
-                    <div className="space-y-2">
-                      {previewCompanyLinks.map((item) => {
-                        const Icon = item.icon!;
-                        return (
-                          <button
-                            key={item.title}
-                            type="button"
-                            onClick={handlePreviewClick}
-                            className="flex w-full items-center gap-3 rounded-2xl bg-gray-50 px-4 py-3 text-left font-semibold text-gray-800"
-                          >
-                            <Icon size={18} />
-                            <span>{item.title}</span>
-                            {item.badge ? (
-                              <span className="ml-auto rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700">
-                                {item.badge}
-                              </span>
-                            ) : (
-                              <Lock size={14} className="ml-auto text-gray-300" />
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
                 </section>
 
                 <section>
@@ -659,24 +617,6 @@ function HomePreviewNav({
                         <Lock size={14} className="ml-auto text-gray-300" />
                       </button>
                     ))}
-                  </div>
-
-                  <div className="mt-5 space-y-2">
-                    {previewCvManagerLinks.map((item) => {
-                      const Icon = item.icon!;
-                      return (
-                        <button
-                          key={item.title}
-                          type="button"
-                          onClick={handlePreviewClick}
-                          className="flex w-full items-center gap-3 rounded-2xl bg-gray-50 px-4 py-3 text-left font-semibold text-gray-800"
-                        >
-                          <Icon size={18} />
-                          <span>{item.title}</span>
-                          <Lock size={14} className="ml-auto text-gray-300" />
-                        </button>
-                      );
-                    })}
                   </div>
                 </section>
 
@@ -737,8 +677,93 @@ function HomePreviewNav({
   );
 }
 
-export default function Home() {
-  const searchParams = useSearchParams();
+function JobCard({
+  job,
+  onAction,
+}: {
+  job: PublicJobItem;
+  onAction: () => void;
+}) {
+  return (
+    <article className="flex h-full flex-col rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md md:p-6">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="mb-2 flex flex-wrap items-center gap-2 text-xs font-bold">
+            <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700">
+              {job.employmentType || 'Toàn thời gian'}
+            </span>
+            {job.workplaceType ? (
+              <span className="rounded-full bg-blue-50 px-2.5 py-1 text-blue-700">
+                {job.workplaceType}
+              </span>
+            ) : null}
+          </div>
+          <h4 className="line-clamp-2 text-lg font-extrabold text-gray-900">{job.title}</h4>
+          <p className="mt-1 text-sm font-semibold text-gray-500">{job.companyName}</p>
+        </div>
+
+        <div className="rounded-xl bg-gray-50 p-3 text-emerald-600">
+          <Briefcase size={20} />
+        </div>
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold text-gray-600">
+        <span className="inline-flex items-center gap-1 rounded-md border border-gray-100 bg-gray-50 px-2.5 py-1.5">
+          <MapPin size={12} />
+          {job.location || 'Linh hoạt'}
+        </span>
+        <span className="rounded-md border border-gray-100 bg-gray-50 px-2.5 py-1.5">
+          {displaySalary(job)}
+        </span>
+      </div>
+
+      <p className="mt-4 line-clamp-3 text-sm leading-6 text-gray-600">{excerpt(job.description)}</p>
+
+      {job.aiSummary ? (
+        <div className="mt-4 rounded-xl border border-purple-100 bg-purple-50 p-3 text-xs leading-5 text-purple-700">
+          <span className="font-bold">AI tóm tắt:</span> {excerpt(job.aiSummary, 110)}
+        </div>
+      ) : null}
+
+      <div className="mt-auto pt-5">
+        <button
+          onClick={onAction}
+          className="w-full rounded-xl bg-emerald-500 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-emerald-600"
+        >
+          Ứng tuyển ngay
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function LoadingJobs() {
+  return (
+    <div className="flex min-h-[220px] items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-sm">
+      <div className="flex items-center gap-3 text-sm font-semibold text-gray-500">
+        <Loader2 size={18} className="animate-spin" />
+        Đang tải danh sách việc làm...
+      </div>
+    </div>
+  );
+}
+
+function JobsError({ message }: { message: string }) {
+  return (
+    <div className="rounded-2xl border border-rose-100 bg-rose-50 p-5 text-sm text-rose-700 shadow-sm">
+      <div className="flex items-start gap-3">
+        <AlertCircle size={18} className="mt-0.5 shrink-0" />
+        <div>
+          <div className="font-bold">Không thể tải danh sách việc làm</div>
+          <p className="mt-1">{message}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function HomePage() {
+  const [redirectParam, setRedirectParam] = useState<string | null>(null);
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [dismissedRedirectLogin, setDismissedRedirectLogin] = useState(false);
@@ -754,9 +779,7 @@ export default function Home() {
   const requireAuth = () => setIsLoginModalOpen(true);
 
   useEffect(() => {
-    const syncRole = () => {
-      setCurrentRole(getStoredAuth().role);
-    };
+    const syncRole = () => setCurrentRole(getStoredAuth().role);
 
     syncRole();
     window.addEventListener('auth-changed', syncRole);
@@ -807,12 +830,17 @@ export default function Home() {
     void loadJobs();
   }, [loadJobs]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const redirect = new URLSearchParams(window.location.search).get('redirect');
+    setRedirectParam(redirect);
+  }, []);
+
   const handleLogout = () => {
     logoutClient();
     window.location.href = '/';
   };
 
-  const redirectParam = searchParams.get('redirect');
   const shouldAutoOpenLogin = !!redirectParam && !currentRole && !dismissedRedirectLogin;
   const isLoginModalVisible = isLoginModalOpen || shouldAutoOpenLogin;
 
@@ -985,169 +1013,80 @@ export default function Home() {
           </button>
         </div>
 
-        {jobsLoading ? (
-          <div className="flex min-h-[260px] items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-sm">
-            <div className="text-center">
-              <Loader2 className="mx-auto mb-4 animate-spin text-emerald-500" size={34} />
-              <p className="font-medium text-gray-500">Đang tải việc làm từ hệ thống...</p>
+        {jobsLoading ? <LoadingJobs /> : null}
+        {!jobsLoading && jobsError ? <JobsError message={jobsError} /> : null}
+
+        {!jobsLoading && !jobsError ? (
+          jobs.length > 0 ? (
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {jobs.map((job) => (
+                <JobCard key={job.id} job={job} onAction={handleJobAction} />
+              ))}
             </div>
-          </div>
-        ) : jobsError ? (
-          <div className="rounded-2xl border border-red-100 bg-red-50 p-6 text-center shadow-sm md:p-8">
-            <AlertCircle className="mx-auto mb-4 text-red-500" size={40} />
-            <h4 className="mb-2 text-lg font-bold text-red-700">Không tải được danh sách việc làm</h4>
-            <p className="mb-5 text-sm text-red-600">{jobsError}</p>
-            <button
-              onClick={() => void loadJobs(keywordInput, locationInput)}
-              className="rounded-lg bg-red-600 px-5 py-3 font-bold text-white transition-colors hover:bg-red-700"
-            >
-              Thử lại
-            </button>
-          </div>
-        ) : jobs.length === 0 ? (
-          <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm md:p-10">
-            <Briefcase className="mx-auto mb-4 text-gray-300" size={48} />
-            <h4 className="mb-2 text-xl font-bold text-gray-900">Chưa có tin phù hợp</h4>
-            <p className="text-sm text-gray-500 md:text-base">
-              Không tìm thấy tin tuyển dụng nào khớp với từ khóa hoặc khu vực bạn vừa nhập.
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 md:gap-6">
-            {jobs.map((job) => (
-              <div
-                key={job.id}
-                className="flex flex-col rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition-shadow hover:shadow-md md:p-6"
-              >
-                <div className="mb-4 flex items-start justify-between md:mb-6">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-100 bg-gray-50 text-lg font-bold text-gray-400 md:h-12 md:w-12 md:text-xl">
-                    {job.companyName?.charAt(0)?.toUpperCase() || 'C'}
-                  </div>
-
-                  <span className="rounded-full bg-orange-50 px-2 py-1 text-[10px] font-bold text-orange-600 md:px-3 md:text-xs">
-                    {job.employmentType || 'Toàn thời gian'}
-                  </span>
-                </div>
-
-                <h4 className="mb-1 text-lg font-bold text-gray-900 md:text-xl">{job.title}</h4>
-
-                <p className="mb-4 text-xs font-medium text-gray-500 md:mb-6 md:text-sm">
-                  {job.companyName} • {job.location}
-                </p>
-
-                <div className="mb-4 flex flex-wrap gap-2 md:mb-6">
-                  <span className="rounded-md border border-gray-100 bg-gray-50 px-2 py-1 text-[10px] font-bold text-gray-600 md:px-3 md:text-xs">
-                    {job.workplaceType?.trim() || 'Môi trường linh hoạt'}
-                  </span>
-                  <span className="rounded-md border border-gray-100 bg-gray-50 px-2 py-1 text-[10px] font-bold text-gray-600 md:px-3 md:text-xs">
-                    {displaySalary(job)}
-                  </span>
-                </div>
-
-                <p className="mb-6 min-h-[48px] text-xs leading-5 text-gray-600 md:text-sm md:leading-6">
-                  {excerpt(job.description)}
-                </p>
-
-                <button
-                  onClick={handleJobAction}
-                  className="mt-auto flex w-full items-center justify-center gap-2 rounded-lg bg-gray-50 py-2.5 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-100 md:py-3 md:text-base"
-                >
-                  <Lock size={16} className="text-gray-400" />
-                  {currentRole ? 'Vào xem chi tiết' : 'Đăng nhập ứng tuyển'}
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+          ) : (
+            <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-8 text-center text-gray-500">
+              Hiện chưa có việc làm phù hợp với bộ lọc của bạn.
+            </div>
+          )
+        ) : null}
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-12 md:px-6 md:pb-20">
-        <div className="mb-6 flex flex-col items-start justify-between gap-4 md:mb-8 md:flex-row md:items-end">
+      <section className="bg-gradient-to-b from-white to-slate-50 px-4 py-12 md:px-6 md:py-20">
+        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div>
-            <h3 className="mb-2 text-2xl font-bold text-gray-900 md:text-3xl">Thông tin thị trường</h3>
-            <p className="text-sm text-gray-500 md:text-base">
-              Dữ liệu thời gian thực về xu hướng tuyển dụng hiện nay.
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700">
+              <LineChart size={16} />
+              Phân tích thị trường việc làm
+            </div>
+            <h3 className="text-3xl font-extrabold text-gray-900 md:text-4xl">
+              Theo dõi xu hướng tuyển dụng, mức lương và nhu cầu kỹ năng
+            </h3>
+            <p className="mt-4 max-w-2xl text-base leading-7 text-gray-600">
+              Khám phá dữ liệu trực quan về số lượng việc làm, kỹ năng nổi bật và xu hướng lương theo
+              ngành nghề. Đăng nhập để mở khóa toàn bộ báo cáo chi tiết.
             </p>
           </div>
-          <div className="flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-600 md:px-4 md:py-2 md:text-sm">
-            <span className="relative flex h-2 w-2 md:h-2.5 md:w-2.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500 md:h-2.5 md:w-2.5"></span>
-            </span>
-            Dữ liệu trực tiếp
-          </div>
-        </div>
 
-        <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm md:p-8">
-          <div className="pointer-events-none grid select-none gap-10 opacity-60 blur-[3px] transition-all duration-500 hover:blur-[2px] md:grid-cols-2 md:gap-16">
-            <div>
-              <h5 className="mb-6 text-xs font-bold text-gray-500 md:mb-8 md:text-sm">
-                Xu hướng đăng tin (2020-2024)
-              </h5>
-              <div className="relative h-32 w-full border-b border-l border-gray-300 md:h-48">
-                <svg
-                  viewBox="0 0 100 50"
-                  className="h-full w-full overflow-visible"
-                  preserveAspectRatio="none"
-                >
-                  <path
-                    d="M0,45 Q20,40 40,25 T70,15 T100,5"
-                    fill="none"
-                    stroke="#3b82f6"
-                    strokeWidth="2"
-                  />
-                  <circle cx="0" cy="45" r="2" fill="#3b82f6" />
-                  <circle cx="40" cy="25" r="2" fill="#3b82f6" />
-                  <circle cx="70" cy="15" r="2" fill="#3b82f6" />
-                  <circle cx="100" cy="5" r="2" fill="#3b82f6" />
-                </svg>
-              </div>
-            </div>
-
-            <div>
-              <h5 className="mb-4 text-xs font-bold text-gray-500 md:mb-6 md:text-sm">
-                Các ngành nghề tăng trưởng mạnh
-              </h5>
-              <div className="space-y-4 md:space-y-6">
-                {[
-                  { name: 'Công nghệ thông tin', w: 'w-[85%]', val: '+24%' },
-                  { name: 'Y tế & Chăm sóc sức khỏe', w: 'w-[60%]', val: '+18%' },
-                  { name: 'Tài chính - Ngân hàng', w: 'w-[45%]', val: '+12%' },
-                  { name: 'Giáo dục & Đào tạo', w: 'w-[25%]', val: '+8%' },
-                ].map((item, i) => (
-                  <div key={i}>
-                    <div className="mb-1.5 flex justify-between text-[10px] font-bold text-gray-600 md:text-xs">
-                      <span>{item.name}</span>
-                      <span className="text-emerald-500">{item.val}</span>
-                    </div>
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200 md:h-2.5">
-                      <div className={`h-full rounded-full bg-blue-400 ${item.w}`}></div>
-                    </div>
+          <div className="relative overflow-hidden rounded-3xl border border-gray-100 bg-white p-6 shadow-xl md:p-8">
+            <div className="grid gap-4 sm:grid-cols-2">
+              {[
+                { label: 'IT / Software', val: '92%', w: 'w-[92%]' },
+                { label: 'Sales', val: '84%', w: 'w-[84%]' },
+                { label: 'Marketing', val: '78%', w: 'w-[78%]' },
+                { label: 'Kế toán', val: '69%', w: 'w-[69%]' },
+              ].map((item) => (
+                <div key={item.label} className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                  <div className="mb-3 flex items-center justify-between text-sm font-semibold text-gray-700">
+                    <span>{item.label}</span>
+                    <span>{item.val}</span>
                   </div>
-                ))}
-              </div>
+                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-gray-200">
+                    <div className={`h-full rounded-full bg-blue-400 ${item.w}`}></div>
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
 
-          <div className="absolute inset-0 flex items-center justify-center bg-white/40 p-4 backdrop-blur-[2px]">
-            <div className="w-full max-w-[420px] animate-in rounded-2xl border border-gray-100 bg-white p-6 text-center shadow-xl duration-500 fade-in zoom-in md:p-8">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600 md:mb-5 md:h-14 md:w-14">
-                <LineChart size={24} className="md:h-7 md:w-7" />
+            <div className="absolute inset-0 flex items-center justify-center bg-white/40 p-4 backdrop-blur-[2px]">
+              <div className="w-full max-w-[420px] rounded-2xl border border-gray-100 bg-white p-6 text-center shadow-xl md:p-8">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600 md:h-14 md:w-14">
+                  <LineChart size={24} className="md:h-7 md:w-7" />
+                </div>
+                <h4 className="mb-2 text-lg font-extrabold text-gray-900 md:text-xl">
+                  Mở khóa Phân tích Chi tiết
+                </h4>
+                <p className="mb-6 text-xs leading-relaxed text-gray-500 md:text-sm">
+                  Truy cập báo cáo toàn diện về xu hướng thị trường, mức lương tiêu chuẩn và tốc độ
+                  tăng trưởng của các ngành nghề bằng cách đăng nhập.
+                </p>
+                <button
+                  onClick={currentRole ? undefined : requireAuth}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-500 py-3 text-sm font-bold text-white transition-colors hover:bg-emerald-600 md:py-3.5 md:text-base"
+                >
+                  <Lock size={16} className="md:h-[18px] md:w-[18px]" />
+                  {currentRole ? 'Xem toàn bộ dữ liệu' : 'Đăng nhập để xem'}
+                </button>
               </div>
-              <h4 className="mb-2 text-lg font-extrabold text-gray-900 md:mb-3 md:text-xl">
-                Mở khóa Phân tích Chi tiết
-              </h4>
-              <p className="mb-6 text-xs leading-relaxed text-gray-500 md:mb-8 md:text-sm">
-                Truy cập báo cáo toàn diện về xu hướng thị trường, mức lương tiêu chuẩn và tốc độ
-                tăng trưởng của các ngành nghề bằng cách đăng nhập.
-              </p>
-              <button
-                onClick={currentRole ? undefined : requireAuth}
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-500 py-3 text-sm font-bold text-white transition-colors hover:bg-emerald-600 md:py-3.5 md:text-base"
-              >
-                <Lock size={16} className="md:h-[18px] md:w-[18px]" />
-                {currentRole ? 'Xem toàn bộ dữ liệu' : 'Đăng nhập để xem'}
-              </button>
             </div>
           </div>
         </div>
@@ -1173,98 +1112,48 @@ export default function Home() {
             </div>
 
             <div className="space-y-6 md:space-y-8">
-              <div className="flex gap-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-bold text-gray-600 md:text-base">
-                  1
+              {[
+                ['1', 'Tạo tài khoản', 'Đăng ký miễn phí và thiết lập hồ sơ nghề nghiệp của bạn.'],
+                ['2', 'Tìm việc phù hợp', 'Lọc theo vị trí, kỹ năng, mức lương và địa điểm.'],
+                ['3', 'Ứng tuyển nhanh', 'Nộp CV và theo dõi trạng thái ứng tuyển trên một nơi.'],
+              ].map(([step, title, desc]) => (
+                <div key={step} className="flex gap-4">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-bold text-gray-600 md:text-base">
+                    {step}
+                  </div>
+                  <div>
+                    <h5 className="mb-1 text-sm font-bold text-gray-900 md:text-base">{title}</h5>
+                    <p className="text-xs text-gray-500 md:text-sm">{desc}</p>
+                  </div>
                 </div>
-                <div>
-                  <h5 className="mb-1 text-sm font-bold text-gray-900 md:text-base">Tạo Tài khoản</h5>
-                  <p className="text-xs text-gray-500 md:text-sm">
-                    Đăng ký hoàn toàn miễn phí và thiết lập hồ sơ chuyên nghiệp của bạn.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex gap-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-bold text-gray-600 md:text-base">
-                  2
-                </div>
-                <div>
-                  <h5 className="mb-1 text-sm font-bold text-gray-900 md:text-base">
-                    Tải lên CV của bạn
-                  </h5>
-                  <p className="text-xs text-gray-500 md:text-sm">
-                    Hệ thống AI phân tích CV để đề xuất công việc phù hợp nhất.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex gap-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-bold text-gray-600 md:text-base">
-                  3
-                </div>
-                <div>
-                  <h5 className="mb-1 text-sm font-bold text-gray-900 md:text-base">
-                    Ứng tuyển & Nhận việc
-                  </h5>
-                  <p className="text-xs text-gray-500 md:text-sm">
-                    Gửi hồ sơ chỉ với một cú chạm và theo dõi trạng thái theo thời gian thực.
-                  </p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
           <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm md:p-10">
             <div className="mb-6 flex items-center gap-3 md:mb-8">
-              <div className="rounded-lg bg-emerald-100 p-2 text-emerald-600">
+              <div className="rounded-lg bg-blue-100 p-2 text-blue-600">
                 <Building size={20} className="md:h-6 md:w-6" />
               </div>
               <h4 className="text-xl font-bold md:text-2xl">Dành cho Nhà tuyển dụng</h4>
             </div>
 
             <div className="space-y-6 md:space-y-8">
-              <div className="flex gap-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-bold text-gray-600 md:text-base">
-                  1
+              {[
+                ['1', 'Tạo hồ sơ công ty', 'Xây dựng thương hiệu tuyển dụng và xác thực thông tin.'],
+                ['2', 'Đăng tin tuyển dụng', 'Quản lý JD, mức lương và hạn nộp hồ sơ linh hoạt.'],
+                ['3', 'Sàng lọc ứng viên', 'Theo dõi ứng viên và phối hợp tuyển dụng hiệu quả.'],
+              ].map(([step, title, desc]) => (
+                <div key={step} className="flex gap-4">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-bold text-gray-600 md:text-base">
+                    {step}
+                  </div>
+                  <div>
+                    <h5 className="mb-1 text-sm font-bold text-gray-900 md:text-base">{title}</h5>
+                    <p className="text-xs text-gray-500 md:text-sm">{desc}</p>
+                  </div>
                 </div>
-                <div>
-                  <h5 className="mb-1 text-sm font-bold text-gray-900 md:text-base">
-                    Đăng tin tuyển dụng
-                  </h5>
-                  <p className="text-xs text-gray-500 md:text-sm">
-                    Tạo tin đăng nhanh chóng trong vài phút với đầy đủ thông tin hiển thị.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex gap-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-bold text-gray-600 md:text-base">
-                  2
-                </div>
-                <div>
-                  <h5 className="mb-1 text-sm font-bold text-gray-900 md:text-base">
-                    Sàng lọc Ứng viên
-                  </h5>
-                  <p className="text-xs text-gray-500 md:text-sm">
-                    Dễ dàng lọc ứng viên thông qua kỹ năng, kinh nghiệm và điểm đánh giá AI.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex gap-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-bold text-gray-600 md:text-base">
-                  3
-                </div>
-                <div>
-                  <h5 className="mb-1 text-sm font-bold text-gray-900 md:text-base">
-                    Tuyển dụng Nhân tài
-                  </h5>
-                  <p className="text-xs text-gray-500 md:text-sm">
-                    Lên lịch phỏng vấn và gửi thư mời làm việc trực tiếp thông qua nền tảng.
-                  </p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
@@ -1337,7 +1226,7 @@ export default function Home() {
             </h5>
             <ul className="space-y-2 text-xs font-medium text-gray-500 md:space-y-3 md:text-sm">
               <li>
-                <a href="#" className="hover:text-emerald-500">
+                <a href="#job-search-section" className="hover:text-emerald-500">
                   Tìm việc làm
                 </a>
               </li>
@@ -1347,7 +1236,7 @@ export default function Home() {
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-emerald-500">
+                <a href="#how-it-works" className="hover:text-emerald-500">
                   Cẩm nang nghề nghiệp
                 </a>
               </li>
@@ -1378,9 +1267,7 @@ export default function Home() {
           </div>
 
           <div>
-            <h5 className="mb-3 text-sm font-bold text-gray-900 md:mb-4 md:text-base">
-              Về chúng tôi
-            </h5>
+            <h5 className="mb-3 text-sm font-bold text-gray-900 md:mb-4 md:text-base">Về chúng tôi</h5>
             <ul className="space-y-2 text-xs font-medium text-gray-500 md:space-y-3 md:text-sm">
               <li>
                 <a href="#" className="hover:text-emerald-500">
