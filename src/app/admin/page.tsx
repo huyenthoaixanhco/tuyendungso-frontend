@@ -3,8 +3,8 @@
 import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import AuthGuard from '@/components/AuthGuard';
-import { logoutClient } from '@/lib/auth/client';
 import BrandLogo from '@/components/BrandLogo';
+import { logoutClient } from '@/lib/auth/client';
 import {
   adminApi,
   AdminAiInsightResponse,
@@ -385,23 +385,12 @@ function AdminPageContent() {
       <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
         <header className="sticky top-0 z-40 flex flex-col gap-3 border-b border-slate-200/60 bg-white/80 px-4 py-3 shadow-sm backdrop-blur-md md:flex-row md:items-center md:justify-between md:px-6 md:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 md:gap-3">
-              <div className="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-1.5 shadow-lg shadow-emerald-500/20 md:p-2">
-                <Shield className="text-white" size={20} strokeWidth={2.5} />
-              </div>
-              <BrandLogo
-                  textClassName="text-lg font-black text-gray-900 md:text-xl"
-                  logoClassName="h-8 w-8 rounded-sm object-contain"
-                />
-              <div>
-                <h1 className="text-lg font-extrabold leading-none tracking-tight text-slate-900 md:text-xl">
-                  Tuyendungso.vn
-                </h1>
-                <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-600 md:text-xs">
-                  Cổng Quản Trị
-                </p>
-              </div>
-            </div>
+            <BrandLogo
+              className="gap-2 md:gap-3"
+              logoClassName="h-9 w-9 rounded-xl object-contain md:h-10 md:w-10"
+              textClassName="text-lg font-extrabold leading-none tracking-tight text-slate-900 md:text-xl"
+              subtitle="Cổng Quản Trị"
+            />
 
             <div className="flex items-center gap-2 md:hidden">
               <button onClick={loadAll} className="rounded-full p-2 text-slate-600">

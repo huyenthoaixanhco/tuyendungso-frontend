@@ -2,8 +2,8 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import BrandLogo from '@/components/BrandLogo';
 import AuthGuard from '@/components/AuthGuard';
+import BrandLogo from '@/components/BrandLogo';
 import { logoutClient } from '@/lib/auth/client';
 import {
   employerApi,
@@ -799,13 +799,11 @@ export default function EmployerPage() {
       <div className="min-h-screen bg-white text-gray-900">
         <header className="sticky top-0 z-40 flex flex-col gap-3 border-b border-gray-100 bg-white px-4 py-3 md:flex-row md:items-center md:justify-between md:px-12 md:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <BrandLogo
-                  textClassName="text-xl font-black text-gray-900"
-                  logoClassName="h-8 w-8 rounded-sm object-contain"
-              />
-              <h1 className="text-xl font-black tracking-tight md:text-2xl">Tuyendungso.vn</h1>
-            </div>
+            <BrandLogo
+              className="gap-2"
+              logoClassName="h-8 w-8 rounded-md object-contain md:h-9 md:w-9"
+              textClassName="text-xl font-black tracking-tight text-gray-900 md:text-2xl"
+            />
             <button
               onClick={handleLogoutRequest}
               className="rounded-md bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-200 md:hidden"

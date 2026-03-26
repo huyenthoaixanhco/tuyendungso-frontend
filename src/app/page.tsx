@@ -2,8 +2,8 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import LoginModal from '@/components/LoginModal';
-import BrandLogo from '@/components/BrandLogo';
 import CandidateMegaNav from '@/components/CandidateMegaNav';
+import BrandLogo from '@/components/BrandLogo';
 import { getStoredAuth, logoutClient } from '@/lib/auth/client';
 import { resolveDashboardPath, type Role } from '@/lib/auth/shared';
 import type { LucideIcon } from 'lucide-react';
@@ -884,15 +884,11 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-white font-sans text-gray-900">
       <header className="sticky top-0 z-40 flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 bg-white px-4 py-3 md:px-12 md:py-4">
-        <div className="flex cursor-pointer items-center gap-2">
-              <BrandLogo
-              textClassName="text-xl font-black text-gray-900"
-              logoClassName="h-8 w-8 rounded-sm object-contain"
-              />
-          <h1 className="text-xl font-black tracking-tight text-gray-900 md:text-2xl">
-            Tuyendungso.vn
-          </h1>
-        </div>
+        <BrandLogo
+          className="gap-2"
+          logoClassName="h-9 w-9 rounded-md object-contain md:h-10 md:w-10"
+          textClassName="text-xl font-black tracking-tight text-gray-900 md:text-2xl"
+        />
 
         {currentRole ? (
           <CandidateMegaNav role={currentRole} className="hidden text-gray-600 md:block" />
@@ -1211,12 +1207,11 @@ export default function HomePage() {
       <footer className="border-t border-gray-100 bg-white px-4 py-10 md:px-6 md:py-16">
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-5">
           <div className="sm:col-span-2">
-            <div className="mb-4 flex items-center gap-2">
-              <div className="rounded-sm bg-emerald-500 p-1">
-                <Briefcase className="text-white" size={20} />
-              </div>
-              <span className="text-lg font-black text-gray-900 md:text-xl">Tuyendungso.vn</span>
-            </div>
+            <BrandLogo
+              className="mb-4 gap-2"
+              logoClassName="h-7 w-7 rounded-sm object-contain md:h-8 md:w-8"
+              textClassName="text-lg font-black text-gray-900 md:text-xl"
+            />
             <p className="pr-4 text-xs text-gray-500 md:text-sm">
               Nâng tầm sự nghiệp, kết nối mọi cơ hội bằng các tin tuyển dụng thật trên nền tảng.
             </p>
