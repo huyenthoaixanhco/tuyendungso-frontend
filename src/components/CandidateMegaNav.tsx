@@ -424,9 +424,6 @@ export default function CandidateMegaNav({
           )}
         </div>
 
-        <Link href="/career-guide" className="text-gray-700 transition-colors hover:text-emerald-500">
-          Cẩm nang nghề nghiệp
-        </Link>
       </nav>
 
       <div className="flex items-center lg:hidden">
@@ -590,15 +587,7 @@ export default function CandidateMegaNav({
                 </ul>
               </div>
 
-              <div className="flex flex-col gap-4 border-t border-gray-100 pt-4">
-                <Link
-                  onClick={() => setMobileDrawerOpen(false)}
-                  href="/career-guide"
-                  className="px-2 py-1 font-bold text-gray-700"
-                >
-                  Cẩm nang nghề nghiệp
-                </Link>
-              </div>
+              
             </nav>
           </div>
         </div>
