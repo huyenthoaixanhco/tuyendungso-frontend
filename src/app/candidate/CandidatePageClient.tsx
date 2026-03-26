@@ -8,6 +8,7 @@ import CandidateCvWorkspaceCloud from '@/components/cv/CandidateCvWorkspaceCloud
 import CandidateCvGuide from '@/components/cv/CandidateCvGuide';
 import CandidateCvQuickHub from '@/components/cv/CandidateCvQuickHub';
 import { getStoredAuth, logoutClient } from '@/lib/auth/client';
+import BrandLogo from '@/components/BrandLogo';
 import type { Role } from '@/lib/auth/shared';
 import {
   candidateApi,
@@ -1705,9 +1706,10 @@ export default function CandidatePage() {
           <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 md:grid-cols-5">
             <div className="md:col-span-2">
               <div className="mb-4 flex items-center gap-2">
-                <div className="rounded-sm bg-emerald-500 p-1">
-                  <Briefcase className="text-white" size={20} />
-                </div>
+               <BrandLogo
+  textClassName="text-xl font-black text-gray-900"
+  logoClassName="h-8 w-8 rounded-sm object-contain"
+/>
                 <span className="text-xl font-black text-gray-900">Tuyendungso.vn</span>
               </div>
               <p className="pr-4 text-sm text-gray-500">

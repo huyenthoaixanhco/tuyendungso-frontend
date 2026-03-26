@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import BrandLogo from '@/components/BrandLogo';
 import AuthGuard from '@/components/AuthGuard';
 import { logoutClient } from '@/lib/auth/client';
 import {
@@ -799,9 +800,10 @@ export default function EmployerPage() {
         <header className="sticky top-0 z-40 flex flex-col gap-3 border-b border-gray-100 bg-white px-4 py-3 md:flex-row md:items-center md:justify-between md:px-12 md:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="rounded-md bg-emerald-500 p-1.5">
-                <Briefcase className="text-white" size={20} />
-              </div>
+              <BrandLogo
+                  textClassName="text-xl font-black text-gray-900"
+                  logoClassName="h-8 w-8 rounded-sm object-contain"
+              />
               <h1 className="text-xl font-black tracking-tight md:text-2xl">Tuyendungso.vn</h1>
             </div>
             <button

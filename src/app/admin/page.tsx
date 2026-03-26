@@ -4,6 +4,7 @@ import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'reac
 import { useSearchParams, useRouter } from 'next/navigation';
 import AuthGuard from '@/components/AuthGuard';
 import { logoutClient } from '@/lib/auth/client';
+import BrandLogo from '@/components/BrandLogo';
 import {
   adminApi,
   AdminAiInsightResponse,
@@ -388,6 +389,10 @@ function AdminPageContent() {
               <div className="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-1.5 shadow-lg shadow-emerald-500/20 md:p-2">
                 <Shield className="text-white" size={20} strokeWidth={2.5} />
               </div>
+              <BrandLogo
+                  textClassName="text-lg font-black text-gray-900 md:text-xl"
+                  logoClassName="h-8 w-8 rounded-sm object-contain"
+                />
               <div>
                 <h1 className="text-lg font-extrabold leading-none tracking-tight text-slate-900 md:text-xl">
                   Tuyendungso.vn

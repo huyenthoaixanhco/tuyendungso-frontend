@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import LoginModal from '@/components/LoginModal';
+import BrandLogo from '@/components/BrandLogo';
 import CandidateMegaNav from '@/components/CandidateMegaNav';
 import { getStoredAuth, logoutClient } from '@/lib/auth/client';
 import { resolveDashboardPath, type Role } from '@/lib/auth/shared';
@@ -884,9 +885,10 @@ export default function HomePage() {
     <div className="min-h-screen bg-white font-sans text-gray-900">
       <header className="sticky top-0 z-40 flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 bg-white px-4 py-3 md:px-12 md:py-4">
         <div className="flex cursor-pointer items-center gap-2">
-          <div className="rounded-md bg-emerald-500 p-1.5">
-            <Briefcase className="text-white" size={24} />
-          </div>
+              <BrandLogo
+              textClassName="text-xl font-black text-gray-900"
+              logoClassName="h-8 w-8 rounded-sm object-contain"
+              />
           <h1 className="text-xl font-black tracking-tight text-gray-900 md:text-2xl">
             Tuyendungso.vn
           </h1>
