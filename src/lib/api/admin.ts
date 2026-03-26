@@ -46,6 +46,11 @@ export interface PageResponse<T> {
   last: boolean;
 }
 
+export interface ApiResponse {
+  success: boolean;
+  message: string;
+}
+
 export interface AdminJobListItem {
   id: number;
   title: string;
@@ -140,6 +145,15 @@ export const adminApi = {
     request<AdminUserListItem>(`/api/admin/users/${userId}/employer-approval`, {
       method: 'PATCH',
       body: JSON.stringify({ approved }),
+    }),
+  updateUserPassword: (userId: string, newPassword: string) =>
+    request<ApiResponse>(`/api/admin/users/${userId}/password`, {
+      method: 'PATCH',
+      body: JSON.stringify({ newPassword }),
+    }),
+  deleteUser: (userId: string) =>
+    request<ApiResponse>(`/api/admin/users/${userId}`, {
+      method: 'DELETE',
     }),
   getJobs: (params: { keyword?: string; status?: string; page?: number; size?: number }) => {
     const query = new URLSearchParams();

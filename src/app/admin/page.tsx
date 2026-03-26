@@ -32,6 +32,8 @@ import {
   ChevronRight,
   Activity,
   LogOut,
+  KeyRound,
+  Trash2,
 } from 'lucide-react';
 
 type AdminTab = 'overview' | 'users' | 'jobs' | 'reports' | 'settings' | 'ai';
@@ -255,6 +257,45 @@ function AdminPageContent() {
       await Promise.all([loadUsers(), loadDashboard()]);
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Không cập nhật được trạng thái duyệt công ty');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleUserPasswordReset = async (userId: string, fullName: string) => {
+    const newPassword = window.prompt(`Nhập mật khẩu mới cho "${fullName}"`);
+    if (!newPassword) return;
+
+    const confirmPassword = window.prompt('Nhập lại mật khẩu mới');
+    if (newPassword !== confirmPassword) {
+      alert('Mật khẩu nhập lại không khớp');
+      return;
+    }
+
+    setActionLoading(`user-password-${userId}`);
+    try {
+      const result = await adminApi.updateUserPassword(userId, newPassword);
+      alert(result?.message || 'Đổi mật khẩu thành công');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Không đổi được mật khẩu');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleUserDelete = async (userId: string, fullName: string) => {
+    const ok = window.confirm(
+      `Bạn có chắc muốn xóa vĩnh viễn tài khoản "${fullName}" khỏi database không?`
+    );
+    if (!ok) return;
+
+    setActionLoading(`user-delete-${userId}`);
+    try {
+      const result = await adminApi.deleteUser(userId);
+      alert(result?.message || 'Đã xóa tài khoản');
+      await Promise.all([loadUsers(), loadDashboard()]);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Không xóa được tài khoản');
     } finally {
       setActionLoading(null);
     }
@@ -663,7 +704,7 @@ function AdminPageContent() {
                         </td>
                         <td className="px-4 py-3 text-xs font-medium text-slate-500 md:px-6 md:py-4 md:text-sm">{formatDate(user.createdAt)}</td>
                         <td className="px-4 py-3 text-right md:px-6 md:py-4">
-                          <div className="flex flex-col justify-end gap-2 sm:flex-row">
+                          <div className="flex flex-col justify-end gap-2 sm:flex-row sm:flex-wrap">
                             <button
                               onClick={() => handleUserStatus(user.id, !user.active)}
                               disabled={actionLoading === `user-status-${user.id}`}
@@ -691,6 +732,24 @@ function AdminPageContent() {
                                 {user.employerApproved ? 'Gỡ duyệt' : 'Duyệt'}
                               </button>
                             )}
+
+                            <button
+                              onClick={() => handleUserPasswordReset(user.id, user.fullName)}
+                              disabled={actionLoading === `user-password-${user.id}`}
+                              className="inline-flex items-center justify-center gap-1 rounded-lg border-2 border-blue-200 bg-blue-50 px-2 py-1 text-xs font-bold text-blue-700 transition-all hover:bg-blue-100 md:gap-1.5 md:px-3 md:py-1.5 md:text-sm disabled:opacity-50"
+                            >
+                              <KeyRound size={12} className="md:h-[14px] md:w-[14px]" />
+                              Đổi MK
+                            </button>
+
+                            <button
+                              onClick={() => handleUserDelete(user.id, user.fullName)}
+                              disabled={actionLoading === `user-delete-${user.id}`}
+                              className="inline-flex items-center justify-center gap-1 rounded-lg border-2 border-red-200 bg-red-50 px-2 py-1 text-xs font-bold text-red-700 transition-all hover:bg-red-100 md:gap-1.5 md:px-3 md:py-1.5 md:text-sm disabled:opacity-50"
+                            >
+                              <Trash2 size={12} className="md:h-[14px] md:w-[14px]" />
+                              Xóa
+                            </button>
                           </div>
                         </td>
                       </tr>
