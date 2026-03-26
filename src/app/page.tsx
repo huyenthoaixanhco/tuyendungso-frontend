@@ -485,15 +485,7 @@ function HomePreviewNav({
           </div>
         </DesktopMenu>
 
-        <button
-          type="button"
-          onClick={() =>
-            document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })
-          }
-          className="py-2 text-sm font-semibold text-gray-700 transition-colors hover:text-emerald-500"
-        >
-          Cẩm nang nghề nghiệp
-        </button>
+      
       </nav>
 
       <div className="lg:hidden">
@@ -656,18 +648,7 @@ function HomePreviewNav({
                 </section>
 
                 <section>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMobileOpen(false);
-                      document
-                        .getElementById('how-it-works')
-                        ?.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-left font-bold text-gray-800"
-                  >
-                    Cẩm nang nghề nghiệp
-                  </button>
+              
                 </section>
               </div>
             </div>
@@ -1232,11 +1213,7 @@ export default function HomePage() {
                   Tính lương Gross/Net
                 </a>
               </li>
-              <li>
-                <a href="#how-it-works" className="hover:text-emerald-500">
-                  Cẩm nang nghề nghiệp
-                </a>
-              </li>
+             
             </ul>
           </div>
 
