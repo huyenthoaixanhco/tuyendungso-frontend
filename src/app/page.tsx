@@ -7,6 +7,7 @@ import BrandLogo from '@/components/BrandLogo';
 import { getStoredAuth, logoutClient } from '@/lib/auth/client';
 import { resolveDashboardPath, type Role } from '@/lib/auth/shared';
 import type { LucideIcon } from 'lucide-react';
+import { ThemePageStyles, ThemeToggleButton, usePageTheme } from '@/components/theme/PageThemeTools';
 import {
   Search,
   MapPin,
@@ -745,6 +746,7 @@ function JobsError({ message }: { message: string }) {
 }
 
 export default function HomePage() {
+  const { isDark, toggleTheme } = usePageTheme();
   const [redirectParam, setRedirectParam] = useState<string | null>(null);
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -863,7 +865,8 @@ export default function HomePage() {
   }, [jobsLoading, jobsError, totalJobs]);
 
   return (
-    <div className="min-h-screen bg-white font-sans text-gray-900">
+    <div className={`${isDark ? 'tds-theme-dark' : 'tds-theme-light'} min-h-screen bg-white font-sans text-gray-900 transition-colors duration-300`}>
+      <ThemePageStyles />
       <header className="sticky top-0 z-40 flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 bg-white px-4 py-3 md:px-12 md:py-4">
         <BrandLogo
           className="gap-2"
@@ -882,6 +885,7 @@ export default function HomePage() {
         )}
 
         <div className="flex flex-wrap items-center gap-2 md:gap-4">
+          <ThemeToggleButton isDark={isDark} onToggle={toggleTheme} />
           {currentRole ? (
             <>
               <a

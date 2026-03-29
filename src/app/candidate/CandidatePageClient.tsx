@@ -48,6 +48,7 @@ import {
   UserCog,
   XCircle,
 } from 'lucide-react';
+import { ThemePageStyles, ThemeToggleButton, usePageTheme } from '@/components/theme/PageThemeTools';
 
 type AppTab =
   | 'jobs'
@@ -452,6 +453,7 @@ function JobCard({
 }
 
 export default function CandidatePage() {
+  const { isDark, toggleTheme } = usePageTheme();
   const [role, setRole] = useState<Role>(null);
   const [profile, setProfile] = useState<CandidateProfileResponse>(DEFAULT_PROFILE);
   const [profileSaving, setProfileSaving] = useState(false);
@@ -899,7 +901,8 @@ export default function CandidatePage() {
 
   return (
     <AuthGuard allowedRoles={['CANDIDATE']}>
-      <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
+      <div className={`${isDark ? 'tds-theme-dark' : 'tds-theme-light'} min-h-screen bg-gray-50 font-sans text-gray-900 transition-colors duration-300`}>
+        <ThemePageStyles />
         <header className="sticky top-0 z-40 flex items-center justify-between border-b border-gray-100 bg-white px-4 py-3 shadow-sm md:px-6 md:py-4 lg:px-12">
           <BrandLogo
             className="cursor-pointer gap-2"
@@ -910,6 +913,7 @@ export default function CandidatePage() {
           <CandidateMegaNav role={role} className="text-gray-600" />
 
           <div className="hidden items-center gap-4 lg:flex">
+            <ThemeToggleButton isDark={isDark} onToggle={toggleTheme} />
             <a
               href="/candidate?tab=profile"
               className="flex items-center gap-2 text-sm font-bold text-gray-700 transition-colors hover:text-emerald-600"
@@ -927,7 +931,8 @@ export default function CandidatePage() {
             </button>
           </div>
 
-          <div className="lg:hidden">
+          <div className="flex items-center gap-2 lg:hidden">
+            <ThemeToggleButton isDark={isDark} onToggle={toggleTheme} />
             <button
               onClick={() => setMobileActionsMenuOpen(!mobileActionsMenuOpen)}
               className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-700"

@@ -35,6 +35,8 @@ import {
   LogOut,
   KeyRound,
   Trash2,
+  Moon,
+  Sun,
 } from 'lucide-react';
 
 type AdminTab = 'overview' | 'users' | 'jobs' | 'reports' | 'settings' | 'ai';
@@ -129,6 +131,44 @@ function statusBadge(status: JobStatus) {
   }
 }
 
+const ADMIN_THEME_STORAGE_KEY = 'admin-page-theme';
+
+function ThemeToggle({
+  isDark,
+  onToggle,
+}: {
+  isDark: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-label={isDark ? 'Chuyển sang light mode' : 'Chuyển sang dark mode'}
+      title={isDark ? 'Chuyển sang light mode' : 'Chuyển sang dark mode'}
+      className="group inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-2 shadow-sm transition-all hover:border-emerald-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-emerald-500 dark:hover:bg-slate-800"
+    >
+      <span
+        className={`relative flex h-8 w-[68px] items-center rounded-full border transition-colors ${
+          isDark ? 'border-slate-600 bg-slate-950' : 'border-slate-300 bg-sky-100'
+        }`}
+      >
+        <span
+          className={`absolute top-1 flex h-6 w-6 items-center justify-center rounded-full bg-white text-slate-700 shadow-sm transition-all ${
+            isDark ? 'left-[38px]' : 'left-1'
+          }`}
+        >
+          {isDark ? <Moon size={14} /> : <Sun size={14} />}
+        </span>
+        <span className="pointer-events-none flex w-full items-center justify-between px-2 text-[11px]">
+          <Sun size={12} className={isDark ? 'text-slate-500' : 'text-amber-500'} />
+          <Moon size={12} className={isDark ? 'text-yellow-300' : 'text-slate-400'} />
+        </span>
+      </span>
+    </button>
+  );
+}
+
 function AdminPageFallback() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
@@ -168,7 +208,29 @@ function AdminPageContent() {
   const [jobKeyword, setJobKeyword] = useState('');
   const [jobStatus, setJobStatus] = useState('');
   const [settingDrafts, setSettingDrafts] = useState<Record<string, string>>({});
+const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+  if (typeof window === 'undefined') return 'light';
 
+  const savedTheme = window.localStorage.getItem(ADMIN_THEME_STORAGE_KEY);
+  if (savedTheme === 'dark' || savedTheme === 'light') {
+    return savedTheme;
+  }
+
+  return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+});
+
+useEffect(() => {
+  if (typeof window === 'undefined') return;
+
+  window.localStorage.setItem(ADMIN_THEME_STORAGE_KEY, theme);
+  document.documentElement.classList.toggle('dark', theme === 'dark');
+  document.documentElement.style.colorScheme = theme;
+
+  return () => {
+    document.documentElement.style.colorScheme = '';
+  };
+}, [theme]);
+  const isDark = theme === 'dark';
   const pageTitle = useMemo(() => tabConfig[activeTab].title, [activeTab]);
 
   const syncSettingDrafts = useCallback((items: AdminSettingItem[]) => {
@@ -229,6 +291,15 @@ function AdminPageContent() {
   useEffect(() => {
     loadAll();
   }, [loadAll]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(ADMIN_THEME_STORAGE_KEY, theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
 
   const handleLogout = () => {
     logoutClient();
@@ -381,22 +452,24 @@ function AdminPageContent() {
   ];
 
   return (
-    <AuthGuard allowedRoles={['ADMIN']}>
-      <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-        <header className="sticky top-0 z-40 flex flex-col gap-3 border-b border-slate-200/60 bg-white/80 px-4 py-3 shadow-sm backdrop-blur-md md:flex-row md:items-center md:justify-between md:px-6 md:py-4">
+   <AuthGuard allowedRoles={['ADMIN']}>
+  <div className="min-h-screen bg-slate-50 font-sans text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100">  
+        <div className="min-h-screen bg-slate-50 font-sans text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100">
+        <header className="sticky top-0 z-40 flex flex-col gap-3 border-b border-slate-200/60 bg-white/80 px-4 py-3 shadow-sm backdrop-blur-md transition-colors duration-300 dark:border-slate-800/70 dark:bg-slate-950/85 md:flex-row md:items-center md:justify-between md:px-6 md:py-4">
           <div className="flex items-center justify-between">
             <BrandLogo
               className="gap-2 md:gap-3"
               logoClassName="h-9 w-9 rounded-xl object-contain md:h-10 md:w-10"
-              textClassName="text-lg font-extrabold leading-none tracking-tight text-slate-900 md:text-xl"
+              textClassName="text-lg font-extrabold leading-none tracking-tight text-slate-900 dark:text-white md:text-xl"
               subtitle="Cổng Quản Trị"
             />
 
             <div className="flex items-center gap-2 md:hidden">
-              <button onClick={loadAll} className="rounded-full p-2 text-slate-600">
+              <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
+              <button onClick={loadAll} className="rounded-full p-2 text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
                 <RefreshCw size={16} className={loading ? 'animate-spin text-emerald-600' : ''} />
               </button>
-              <button onClick={handleLogout} className="rounded-full p-2 text-rose-600">
+              <button onClick={handleLogout} className="rounded-full p-2 text-rose-600 transition-colors hover:bg-rose-50 dark:hover:bg-rose-950/40">
                 <LogOut size={16} />
               </button>
             </div>
@@ -412,8 +485,8 @@ function AdminPageContent() {
                   onClick={() => handleTabChange(key)}
                   className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition-all duration-200 md:gap-2 md:px-4 md:py-2.5 md:text-sm ${
                     isActive
-                      ? 'bg-emerald-50 text-emerald-700 shadow-sm ring-1 ring-inset ring-emerald-600/10'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                      ? 'bg-emerald-50 text-emerald-700 shadow-sm ring-1 ring-inset ring-emerald-600/10 dark:bg-emerald-500/15 dark:text-emerald-300 dark:ring-emerald-500/20'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
                   }`}
                 >
                   <TabIcon size={14} strokeWidth={isActive ? 2.5 : 2} className="md:h-4 md:w-4" />
@@ -424,16 +497,17 @@ function AdminPageContent() {
           </nav>
 
           <div className="hidden items-center gap-3 md:flex">
+            <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
             <button
               onClick={loadAll}
-              className="rounded-full border border-slate-200 p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-emerald-600"
+              className="rounded-full border border-slate-200 p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-emerald-600 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-emerald-400"
               title="Làm mới dữ liệu"
             >
               <RefreshCw size={18} className={loading ? 'animate-spin text-emerald-600' : ''} />
             </button>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-all hover:border-red-200 hover:bg-red-50 hover:text-red-600 active:scale-95"
+              className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-all hover:border-red-200 hover:bg-red-50 hover:text-red-600 active:scale-95 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-red-900 dark:hover:bg-red-950/40 dark:hover:text-red-300"
             >
               <LogOut size={16} />
               <span>Đăng xuất</span>
@@ -444,15 +518,15 @@ function AdminPageContent() {
         <main className="animate-in mx-auto max-w-7xl space-y-6 fade-in slide-in-from-bottom-4 p-4 duration-500 md:space-y-8 md:p-6">
           <section className="flex flex-col items-start justify-between gap-2 md:flex-row md:items-end md:gap-4">
             <div>
-              <h2 className="mb-1 flex items-center gap-2 text-2xl font-black tracking-tight text-slate-900 md:mb-2 md:gap-3 md:text-3xl">
+              <h2 className="mb-1 flex items-center gap-2 text-2xl font-black tracking-tight text-slate-900 dark:text-white md:mb-2 md:gap-3 md:text-3xl">
                 {pageTitle}
               </h2>
-              <p className="text-xs font-medium text-slate-500 md:text-sm">
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 md:text-sm">
                 Quản lý hệ thống, kiểm duyệt nội dung và theo dõi hiệu suất với sự hỗ trợ của AI.
               </p>
             </div>
             {error && (
-              <div className="w-full rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20 md:w-auto md:px-4 md:text-sm">
+              <div className="w-full rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20 dark:bg-red-950/40 dark:text-red-200 dark:ring-red-500/20 md:w-auto md:px-4 md:text-sm">
                 {error}
               </div>
             )}
@@ -464,7 +538,7 @@ function AdminPageContent() {
               return (
                 <div
                   key={card.label}
-                  className="group rounded-2xl border border-slate-200/60 bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md md:p-6"
+                  className="group rounded-2xl border border-slate-200/60 bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700 md:p-6"
                 >
                   <div className="mb-3 flex items-start justify-between md:mb-4">
                     <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${card.color} shadow-inner md:h-12 md:w-12`}>
@@ -472,8 +546,8 @@ function AdminPageContent() {
                     </div>
                   </div>
                   <div>
-                    <h3 className="mb-1 text-xs font-semibold text-slate-500 md:text-sm">{card.label}</h3>
-                    <p className="text-2xl font-black tracking-tight text-slate-900 md:text-4xl">
+                    <h3 className="mb-1 text-xs font-semibold text-slate-500 dark:text-slate-400 md:text-sm">{card.label}</h3>
+                    <p className="text-2xl font-black tracking-tight text-slate-900 dark:text-white md:text-4xl">
                       {loading ? <span className="animate-pulse text-slate-300">...</span> : card.value.toLocaleString('vi-VN')}
                     </p>
                   </div>
@@ -485,7 +559,7 @@ function AdminPageContent() {
           {(activeTab === 'overview' || activeTab === 'reports') && (
             <div className="animate-in grid gap-6 fade-in duration-500 xl:grid-cols-3">
               <div className="space-y-6 xl:col-span-2">
-                <div className="rounded-3xl border border-slate-200/60 bg-white p-5 shadow-sm md:p-8">
+                <div className="rounded-3xl border border-slate-200/60 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:p-8">
                   <div className="mb-4 flex items-center gap-2 md:mb-6">
                     <Activity className="text-emerald-500" size={20} />
                     <h3 className="text-lg font-bold text-slate-900 md:text-xl">Chỉ số vận hành chi tiết</h3>
@@ -500,8 +574,8 @@ function AdminPageContent() {
                   </div>
                 </div>
 
-                <div className="overflow-hidden rounded-3xl border border-slate-200/60 bg-white shadow-sm">
-                  <div className="flex flex-col items-start gap-3 border-b border-slate-100 bg-slate-50/50 p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
+                <div className="overflow-hidden rounded-3xl border border-slate-200/60 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                  <div className="flex flex-col items-start gap-3 border-b border-slate-100 bg-slate-50/50 p-5 dark:border-slate-800 dark:bg-slate-900/60 sm:flex-row sm:items-center sm:justify-between md:p-6">
                     <h3 className="text-lg font-bold text-slate-900">Tin tuyển dụng chờ duyệt</h3>
                     <button
                       onClick={handleBulkAiReview}
@@ -515,7 +589,7 @@ function AdminPageContent() {
 
                   <div className="space-y-4 p-4 md:p-6">
                     {dashboard.latestPendingJobs.length === 0 ? (
-                      <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center md:py-10">
+                      <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-950/50 md:py-10">
                         <CheckCircle2 size={32} className="mx-auto mb-2 text-emerald-400 md:mb-3 md:h-10 md:w-10" />
                         <p className="text-sm font-medium text-slate-600 md:text-base">Tuyệt vời! Đã xử lý hết tin chờ duyệt.</p>
                       </div>
@@ -523,10 +597,10 @@ function AdminPageContent() {
                       dashboard.latestPendingJobs.map((job) => (
                         <div
                           key={job.id}
-                          className="group flex flex-col justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-emerald-300 hover:shadow-md lg:flex-row lg:items-center md:gap-5 md:p-5"
+                          className="group flex flex-col justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-emerald-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-950 dark:hover:border-emerald-500 lg:flex-row lg:items-center md:gap-5 md:p-5"
                         >
                           <div>
-                            <h4 className="text-base font-bold text-slate-900 transition-colors group-hover:text-emerald-700 md:text-lg">{job.title}</h4>
+                            <h4 className="text-base font-bold text-slate-900 transition-colors group-hover:text-emerald-700 dark:text-white dark:group-hover:text-emerald-400 md:text-lg">{job.title}</h4>
                             <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-slate-600 md:mt-1.5 md:gap-2 md:text-sm">
                               <Building2 size={12} className="text-slate-400 md:h-[14px] md:w-[14px]" />
                               <span className="font-medium">{job.companyName}</span>
@@ -602,8 +676,8 @@ function AdminPageContent() {
           )}
 
           {activeTab === 'users' && (
-            <section className="animate-in overflow-hidden rounded-3xl border border-slate-200/60 bg-white shadow-sm fade-in duration-500">
-              <div className="flex flex-col gap-3 border-b border-slate-100 bg-slate-50/50 p-4 sm:flex-row sm:p-6">
+            <section className="animate-in overflow-hidden rounded-3xl border border-slate-200/60 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 fade-in duration-500">
+              <div className="flex flex-col gap-3 border-b border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-900/60 sm:flex-row sm:p-6">
                 <div className="relative flex-1">
                   <Search size={16} className="absolute left-3.5 top-3 text-slate-400 md:top-3.5 md:h-[18px] md:w-[18px]" />
                   <input
@@ -611,14 +685,14 @@ function AdminPageContent() {
                     onChange={(e) => setUserKeyword(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && loadUsers()}
                     placeholder="Tìm kiếm email, tên..."
-                    className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-xs font-medium shadow-sm outline-none transition-all focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 md:py-3 md:text-sm"
+                    className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-xs font-medium shadow-sm outline-none transition-all focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 md:py-3 md:text-sm"
                   />
                 </div>
                 <div className="flex gap-2 md:gap-3">
                   <select
                     value={userRole}
                     onChange={(e) => setUserRole(e.target.value)}
-                    className="w-1/2 cursor-pointer rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-medium shadow-sm outline-none transition-all focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 sm:w-auto md:px-5 md:py-3 md:text-sm"
+                    className="w-1/2 cursor-pointer rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-medium shadow-sm outline-none transition-all focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 sm:w-auto md:px-5 md:py-3 md:text-sm"
                   >
                     <option value="">Tất cả vai trò</option>
                     <option value="CANDIDATE">Ứng viên</option>
@@ -627,7 +701,7 @@ function AdminPageContent() {
                   </select>
                   <button
                     onClick={loadUsers}
-                    className="w-1/2 rounded-2xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-slate-800 hover:shadow-md active:scale-95 sm:w-auto md:px-6 md:py-3 md:text-sm"
+                    className="w-1/2 rounded-2xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-slate-800 hover:shadow-md active:scale-95 dark:bg-emerald-600 dark:hover:bg-emerald-700 sm:w-auto md:px-6 md:py-3 md:text-sm"
                   >
                     Lọc
                   </button>
@@ -635,8 +709,8 @@ function AdminPageContent() {
               </div>
 
               <div className="w-full overflow-x-auto">
-                <table className="w-full min-w-[700px] text-left text-sm">
-                  <thead className="border-b border-slate-200 bg-slate-50/80 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <table className="w-full min-w-[700px] text-left text-sm dark:text-slate-100">
+                  <thead className="border-b border-slate-200 bg-slate-50/80 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-950/70 dark:text-slate-400">
                     <tr>
                       <th className="px-4 py-3 md:px-6 md:py-4">Thông tin</th>
                       <th className="px-4 py-3 md:px-6 md:py-4">Vai trò</th>
@@ -646,15 +720,15 @@ function AdminPageContent() {
                       <th className="px-4 py-3 text-right md:px-6 md:py-4">Thao tác</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {users.map((user) => (
-                      <tr key={user.id} className="group transition-colors hover:bg-slate-50/80">
+                      <tr key={user.id} className="group transition-colors hover:bg-slate-50/80 dark:hover:bg-slate-950/60">
                         <td className="px-4 py-3 md:px-6 md:py-4">
-                          <p className="font-bold text-slate-900 transition-colors group-hover:text-emerald-700">{user.fullName}</p>
-                          <p className="mt-0.5 text-xs text-slate-500 md:text-sm">{user.email}</p>
+                          <p className="font-bold text-slate-900 transition-colors group-hover:text-emerald-700 dark:text-white dark:group-hover:text-emerald-400">{user.fullName}</p>
+                          <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 md:text-sm">{user.email}</p>
                         </td>
                         <td className="px-4 py-3 md:px-6 md:py-4">
-                          <span className="inline-flex items-center rounded-md border border-slate-200 bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-700 md:px-2.5 md:text-xs">
+                          <span className="inline-flex items-center rounded-md border border-slate-200 bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 md:px-2.5 md:text-xs">
                             {user.role === 'CANDIDATE' ? 'Ứng viên' : user.role === 'EMPLOYER' ? 'Tuyển dụng' : 'Quản trị'}
                           </span>
                         </td>
@@ -696,7 +770,7 @@ function AdminPageContent() {
                             </div>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-xs font-medium text-slate-500 md:px-6 md:py-4 md:text-sm">{formatDate(user.createdAt)}</td>
+                        <td className="px-4 py-3 text-xs font-medium text-slate-500 dark:text-slate-400 md:px-6 md:py-4 md:text-sm">{formatDate(user.createdAt)}</td>
                         <td className="px-4 py-3 text-right md:px-6 md:py-4">
                           <div className="flex flex-col justify-end gap-2 sm:flex-row sm:flex-wrap">
                             <button
@@ -764,8 +838,8 @@ function AdminPageContent() {
           )}
 
           {activeTab === 'jobs' && (
-            <section className="animate-in overflow-hidden rounded-3xl border border-slate-200/60 bg-white shadow-sm fade-in duration-500">
-              <div className="flex flex-col gap-3 border-b border-slate-100 bg-slate-50/50 p-4 sm:flex-row sm:p-6">
+            <section className="animate-in overflow-hidden rounded-3xl border border-slate-200/60 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 fade-in duration-500">
+              <div className="flex flex-col gap-3 border-b border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-900/60 sm:flex-row sm:p-6">
                 <div className="relative flex-1">
                   <Search size={16} className="absolute left-3.5 top-3 text-slate-400 md:top-3.5 md:h-[18px] md:w-[18px]" />
                   <input
@@ -773,14 +847,14 @@ function AdminPageContent() {
                     onChange={(e) => setJobKeyword(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && loadJobs()}
                     placeholder="Tìm tiêu đề, công ty..."
-                    className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-xs font-medium shadow-sm outline-none transition-all focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 md:py-3 md:text-sm"
+                    className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-xs font-medium shadow-sm outline-none transition-all focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 md:py-3 md:text-sm"
                   />
                 </div>
                 <div className="flex gap-2 md:gap-3">
                   <select
                     value={jobStatus}
                     onChange={(e) => setJobStatus(e.target.value)}
-                    className="w-1/2 cursor-pointer rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-medium shadow-sm outline-none transition-all focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 sm:w-auto md:px-5 md:py-3 md:text-sm"
+                    className="w-1/2 cursor-pointer rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-medium shadow-sm outline-none transition-all focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 sm:w-auto md:px-5 md:py-3 md:text-sm"
                   >
                     <option value="">Tất cả</option>
                     <option value="PENDING_REVIEW">Chờ duyệt</option>
@@ -791,7 +865,7 @@ function AdminPageContent() {
                   </select>
                   <button
                     onClick={loadJobs}
-                    className="w-1/2 rounded-2xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-slate-800 hover:shadow-md active:scale-95 sm:w-auto md:px-6 md:py-3 md:text-sm"
+                    className="w-1/2 rounded-2xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-slate-800 hover:shadow-md active:scale-95 dark:bg-emerald-600 dark:hover:bg-emerald-700 sm:w-auto md:px-6 md:py-3 md:text-sm"
                   >
                     Lọc
                   </button>
@@ -800,12 +874,12 @@ function AdminPageContent() {
 
               <div className="space-y-4 bg-slate-50/30 p-4 md:p-6">
                 {jobs.map((job) => (
-                  <div key={job.id} className="rounded-2xl border border-slate-200 bg-white p-4 transition-all duration-300 hover:border-emerald-200 hover:shadow-lg md:p-6">
+                  <div key={job.id} className="rounded-2xl border border-slate-200 bg-white p-4 transition-all duration-300 hover:border-emerald-200 hover:shadow-lg dark:border-slate-800 dark:bg-slate-950 dark:hover:border-emerald-500 md:p-6">
                     <div className="flex flex-col gap-4 xl:flex-row xl:gap-6">
                       <div className="flex-1 space-y-3 md:space-y-4">
                         <div>
                           <div className="mb-2 flex flex-wrap items-center gap-2 md:gap-3">
-                            <h3 className="text-lg font-extrabold text-slate-900 md:text-xl">{job.title}</h3>
+                            <h3 className="text-lg font-extrabold text-slate-900 dark:text-white md:text-xl">{job.title}</h3>
                             <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide md:px-3 md:py-1 md:text-xs ${statusBadge(job.status)}`}>
                               {jobStatusDisplay[job.status] || job.status}
                             </span>
@@ -816,7 +890,7 @@ function AdminPageContent() {
                             )}
                           </div>
 
-                          <p className="flex flex-wrap items-center gap-1.5 text-xs font-medium text-slate-600 md:gap-2 md:text-sm">
+                          <p className="flex flex-wrap items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 md:gap-2 md:text-sm">
                             <Building2 size={14} className="text-slate-400 md:h-4 md:w-4" />
                             {job.companyName}
                             <span className="text-slate-300">•</span>
@@ -824,27 +898,27 @@ function AdminPageContent() {
                           </p>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3 md:grid-cols-4 md:gap-4 md:p-4">
+                        <div className="grid grid-cols-2 gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900/70 md:grid-cols-4 md:gap-4 md:p-4">
                           <div>
                             <span className="mb-0.5 block text-[10px] font-bold uppercase tracking-wider text-slate-400 md:text-xs">Loại hình</span>
-                            <span className="text-xs font-semibold text-slate-700 md:text-sm">{job.employmentType || '—'}</span>
+                            <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 md:text-sm">{job.employmentType || '—'}</span>
                           </div>
                           <div>
                             <span className="mb-0.5 block text-[10px] font-bold uppercase tracking-wider text-slate-400 md:text-xs">Làm việc</span>
-                            <span className="text-xs font-semibold text-slate-700 md:text-sm">{job.workplaceType || '—'}</span>
+                            <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 md:text-sm">{job.workplaceType || '—'}</span>
                           </div>
                           <div className="col-span-2 md:col-span-1">
                             <span className="mb-0.5 block text-[10px] font-bold uppercase tracking-wider text-slate-400 md:text-xs">Mức lương</span>
-                            <span className="text-xs font-semibold text-slate-700 md:text-sm">{formatSalaryDisplay(job)}</span>
+                            <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 md:text-sm">{formatSalaryDisplay(job)}</span>
                           </div>
                           <div className="col-span-2 md:col-span-1">
                             <span className="mb-0.5 block text-[10px] font-bold uppercase tracking-wider text-slate-400 md:text-xs">Hạn nộp</span>
-                            <span className="text-xs font-semibold text-slate-700 md:text-sm">{formatDateOnly(job.applicationDeadline)}</span>
+                            <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 md:text-sm">{formatDateOnly(job.applicationDeadline)}</span>
                           </div>
                         </div>
 
                         {job.aiSummary && (
-                          <div className="rounded-xl border border-purple-100 bg-purple-50/50 p-3 text-xs leading-relaxed text-slate-700 md:p-4 md:text-sm">
+                          <div className="rounded-xl border border-purple-100 bg-purple-50/50 p-3 text-xs leading-relaxed text-slate-700 dark:border-purple-900/40 dark:bg-purple-950/30 dark:text-slate-200 md:p-4 md:text-sm">
                             <span className="mb-1 flex items-center gap-1 font-bold text-purple-800">
                               <Bot size={14} className="md:h-4 md:w-4" /> Tóm tắt từ AI:
                             </span>
@@ -887,7 +961,7 @@ function AdminPageContent() {
                 ))}
 
                 {jobs.length === 0 && !loading && (
-                  <div className="rounded-3xl border-2 border-dashed border-slate-200 bg-white py-12 text-center md:py-20">
+                  <div className="rounded-3xl border-2 border-dashed border-slate-200 bg-white py-12 text-center dark:border-slate-700 dark:bg-slate-950 md:py-20">
                     <Briefcase size={40} className="mx-auto mb-3 text-slate-300 md:mb-4 md:h-12 md:w-12" />
                     <p className="text-sm font-medium text-slate-500 md:text-lg">Không có tin tuyển dụng nào.</p>
                   </div>
@@ -901,7 +975,7 @@ function AdminPageContent() {
               {settings.map((item) => (
                 <div
                   key={item.key}
-                  className="flex flex-col rounded-3xl border border-slate-200/60 bg-white p-5 shadow-sm transition-shadow hover:shadow-md md:p-6"
+                  className="flex flex-col rounded-3xl border border-slate-200/60 bg-white p-5 shadow-sm transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900 md:p-6"
                 >
                   <div className="mb-4 md:mb-5">
                     <div className="mb-2 flex items-center gap-1.5 md:gap-2">
@@ -910,8 +984,8 @@ function AdminPageContent() {
                         {item.key}
                       </p>
                     </div>
-                    <h3 className="text-base font-bold leading-tight text-slate-900 md:text-lg">{item.description}</h3>
-                    <p className="mt-1 text-[10px] font-medium text-slate-400 md:mt-2 md:text-xs">Cập nhật: {formatDate(item.updatedAt)}</p>
+                    <h3 className="text-base font-bold leading-tight text-slate-900 dark:text-white md:text-lg">{item.description}</h3>
+                    <p className="mt-1 text-[10px] font-medium text-slate-400 dark:text-slate-500 md:mt-2 md:text-xs">Cập nhật: {formatDate(item.updatedAt)}</p>
                   </div>
 
                   <div className="mt-auto space-y-3 md:space-y-4">
@@ -920,7 +994,7 @@ function AdminPageContent() {
                       onChange={(e) =>
                         setSettingDrafts((prev) => ({ ...prev, [item.key]: e.target.value }))
                       }
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-medium outline-none transition-all focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 md:px-4 md:py-3 md:text-base"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-medium outline-none transition-all focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:bg-slate-900 md:px-4 md:py-3 md:text-base"
                     />
 
                     <button
@@ -969,27 +1043,27 @@ function AdminPageContent() {
                 <MetricBox title="Đang chờ xử lý" value={dashboard.pendingJobs} />
               </div>
 
-              <div className="rounded-3xl border border-slate-200/60 bg-white p-5 shadow-sm md:p-8">
+              <div className="rounded-3xl border border-slate-200/60 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:p-8">
                 <div className="mb-5 flex items-center gap-2 md:mb-6 md:gap-3">
                   <div className="rounded-xl bg-purple-100 p-2 md:p-2.5">
                     <Bot size={20} className="text-purple-600 md:h-6 md:w-6" />
                   </div>
-                  <h3 className="text-lg font-bold text-slate-900 md:text-2xl">Chiến lược đề xuất từ AI</h3>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white md:text-2xl">Chiến lược đề xuất từ AI</h3>
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2 md:gap-4">
                   {aiInsight.recommendedActions.map((item, idx) => (
                     <div
                       key={idx}
-                      className="group relative overflow-hidden rounded-2xl border border-purple-100 bg-purple-50/50 p-4 transition-colors hover:border-purple-200 hover:bg-purple-50 md:p-6"
+                      className="group relative overflow-hidden rounded-2xl border border-purple-100 bg-purple-50/50 p-4 transition-colors hover:border-purple-200 hover:bg-purple-50 dark:border-purple-900/40 dark:bg-purple-950/30 dark:hover:border-purple-700 dark:hover:bg-purple-950/40 md:p-6"
                     >
                       <div className="absolute left-0 top-0 h-full w-1 rounded-l-2xl bg-purple-400"></div>
-                      <p className="pl-2 text-sm font-semibold leading-relaxed text-purple-900 md:text-base">{item}</p>
+                      <p className="pl-2 text-sm font-semibold leading-relaxed text-purple-900 dark:text-purple-100 md:text-base">{item}</p>
                     </div>
                   ))}
                   {aiInsight.recommendedActions.length === 0 && (
-                    <div className="col-span-full rounded-2xl border-2 border-dashed border-slate-200 py-8 text-center md:py-12">
-                      <p className="text-sm font-medium text-slate-500 md:text-base">Hệ thống đang hoạt động trơn tru. Chưa có đề xuất.</p>
+                    <div className="col-span-full rounded-2xl border-2 border-dashed border-slate-200 py-8 text-center dark:border-slate-700 md:py-12">
+                      <p className="text-sm font-medium text-slate-500 dark:text-slate-400 md:text-base">Hệ thống đang hoạt động trơn tru. Chưa có đề xuất.</p>
                     </div>
                   )}
                 </div>
@@ -997,6 +1071,7 @@ function AdminPageContent() {
             </section>
           )}
         </main>
+        </div>
       </div>
     </AuthGuard>
   );
@@ -1016,10 +1091,10 @@ function MetricBox({ title, value, highlight = false }: { title: string; value: 
       className={`relative overflow-hidden rounded-2xl border p-4 transition-all md:p-5 ${
         highlight
           ? 'border-transparent bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md'
-          : 'border-slate-200 bg-slate-50 text-slate-900 hover:border-slate-300'
+          : 'border-slate-200 bg-slate-50 text-slate-900 hover:border-slate-300 dark:border-slate-800 dark:bg-slate-950/70 dark:text-white dark:hover:border-slate-700'
       }`}
     >
-      <p className={`mb-1 text-[10px] font-semibold md:mb-2 md:text-sm ${highlight ? 'text-emerald-50' : 'text-slate-500'}`}>{title}</p>
+      <p className={`mb-1 text-[10px] font-semibold md:mb-2 md:text-sm ${highlight ? 'text-emerald-50' : 'text-slate-500 dark:text-slate-400'}`}>{title}</p>
       <p className="text-2xl font-black tracking-tight md:text-3xl">{value.toLocaleString('vi-VN')}</p>
       {highlight && (
         <div className="absolute -bottom-2 -right-2 rotate-12 opacity-10 md:-bottom-4 md:-right-4">

@@ -36,6 +36,7 @@ import CandidateFiltersPanel from '@/components/employer/CandidateFiltersPanel';
 import CandidateDetailPanel from '@/components/employer/CandidateDetailPanel';
 import AllApplicationsTable from '@/components/employer/AllApplicationsTable';
 import { SectionCard, StatusBadge, TabLink, statusLabel } from '@/components/employer/EmployerUi';
+import { ThemePageStyles, ThemeToggleButton, usePageTheme } from '@/components/theme/PageThemeTools';
 
 type EmployerTab = 'overview' | 'jobs' | 'candidates' | 'company' | 'reports';
 
@@ -205,6 +206,7 @@ function averageAiScore(items: EmployerApplicationListItem[]) {
 }
 
 export default function EmployerPage() {
+  const { isDark, toggleTheme } = usePageTheme();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -796,7 +798,8 @@ export default function EmployerPage() {
 
   return (
     <AuthGuard allowedRoles={['EMPLOYER']}>
-      <div className="min-h-screen bg-white text-gray-900">
+      <div className={`${isDark ? 'tds-theme-dark' : 'tds-theme-light'} min-h-screen bg-white text-gray-900 transition-colors duration-300`}>
+        <ThemePageStyles />
         <header className="sticky top-0 z-40 flex flex-col gap-3 border-b border-gray-100 bg-white px-4 py-3 md:flex-row md:items-center md:justify-between md:px-12 md:py-4">
           <div className="flex items-center justify-between">
             <BrandLogo
@@ -804,12 +807,15 @@ export default function EmployerPage() {
               logoClassName="h-8 w-8 rounded-md object-contain md:h-9 md:w-9"
               textClassName="text-xl font-black tracking-tight text-gray-900 md:text-2xl"
             />
-            <button
-              onClick={handleLogoutRequest}
-              className="rounded-md bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-200 md:hidden"
-            >
-              Đăng xuất
-            </button>
+            <div className="flex items-center gap-2 md:hidden">
+              <ThemeToggleButton isDark={isDark} onToggle={toggleTheme} />
+              <button
+                onClick={handleLogoutRequest}
+                className="rounded-md bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-200"
+              >
+                Đăng xuất
+              </button>
+            </div>
           </div>
 
           <nav className="scrollbar-hide flex items-center gap-4 overflow-x-auto whitespace-nowrap text-sm md:gap-6">
@@ -831,6 +837,7 @@ export default function EmployerPage() {
           </nav>
 
           <div className="hidden items-center gap-3 md:flex">
+            <ThemeToggleButton isDark={isDark} onToggle={toggleTheme} />
             <div className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 px-3 py-2">
               {companyLogoSrc ? (
                 <img
